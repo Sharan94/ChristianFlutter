@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(title: 'Home'),
     );
   }
 }
@@ -43,8 +43,98 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+enum TabsDemoStyle { iconsAndText, iconsOnly, textOnly }
+
+class _Page {
+  const _Page({this.icon, this.text});
+
+  final IconData icon;
+  final String text;
+}
+
+const List<_Page> _allPages = <_Page>[
+  _Page(icon: Icons.home, text: 'Home'),
+  _Page(icon: Icons.book, text: 'Gospel'),
+  _Page(icon: Icons.account_balance, text: 'Church'),
+  _Page(icon: Icons.people, text: 'Disciple'),
+  _Page(icon: Icons.person, text: 'Me'),
+];
+
+class _MyHomePageState extends State<MyHomePage>
+    with SingleTickerProviderStateMixin {
+  TabController _controller;
+  TabsDemoStyle _demoStyle = TabsDemoStyle.iconsAndText;
+  bool _customIndicator = false;
   int _counter = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TabController(vsync: this, length: _allPages.length);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Decoration getIndicator() {
+    if (!_customIndicator) return const UnderlineTabIndicator();
+
+    switch (_demoStyle) {
+      case TabsDemoStyle.iconsAndText:
+        return ShapeDecoration(
+          shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                side: BorderSide(
+                  color: Colors.white24,
+                  width: 2.0,
+                ),
+              ) +
+              const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(4.0)),
+                side: BorderSide(
+                  color: Colors.transparent,
+                  width: 4.0,
+                ),
+              ),
+        );
+
+      case TabsDemoStyle.iconsOnly:
+        return ShapeDecoration(
+          shape: const CircleBorder(
+                side: BorderSide(
+                  color: Colors.white24,
+                  width: 4.0,
+                ),
+              ) +
+              const CircleBorder(
+                side: BorderSide(
+                  color: Colors.transparent,
+                  width: 4.0,
+                ),
+              ),
+        );
+
+      case TabsDemoStyle.textOnly:
+        return ShapeDecoration(
+          shape: const StadiumBorder(
+                side: BorderSide(
+                  color: Colors.white24,
+                  width: 2.0,
+                ),
+              ) +
+              const StadiumBorder(
+                side: BorderSide(
+                  color: Colors.transparent,
+                  width: 4.0,
+                ),
+              ),
+        );
+    }
+    return null;
+  }
 
   void _incrementCounter() {
     setState(() {
@@ -65,46 +155,65 @@ class _MyHomePageState extends State<MyHomePage> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
+    final Color iconColor = Theme.of(context).accentColor;
     return Scaffold(
       appBar: AppBar(
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
-            ),
-          ],
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.search),
+            tooltip: 'Open search',
+            onPressed: () {
+              // ...
+            },
+          ),
+        ],
+        bottom: TabBar(
+          controller: _controller,
+          isScrollable: true,
+          indicator: getIndicator(),
+          tabs: _allPages.map<Tab>((_Page page) {
+            assert(_demoStyle != null);
+            switch (_demoStyle) {
+              case TabsDemoStyle.iconsAndText:
+                return Tab(text: page.text, icon: Icon(page.icon));
+              case TabsDemoStyle.iconsOnly:
+                return Tab(icon: Icon(page.icon));
+              case TabsDemoStyle.textOnly:
+                return Tab(text: page.text);
+            }
+            return null;
+          }).toList(),
         ),
       ),
+      body: TabBarView(
+          controller: _controller,
+          children: _allPages.map<Widget>((_Page page) {
+            return SafeArea(
+              top: false,
+              bottom: false,
+              child: Container(
+                key: ObjectKey(page.icon),
+                padding: const EdgeInsets.all(12.0),
+                child: Card(
+                  child: Center(
+                    child: Icon(
+                      page.icon,
+                      color: iconColor,
+                      size: 128.0,
+                      semanticLabel: 'Placeholder for ${page.text} tab',
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList()),
       floatingActionButton: FloatingActionButton(
         onPressed: _incrementCounter,
         tooltip: 'Increment',
-        child: Icon(Icons.add),
+        child: Icon(Icons.edit),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
