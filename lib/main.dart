@@ -169,6 +169,13 @@ class _MyHomePageState extends State<MyHomePage>
               // ...
             },
           ),
+          IconButton(
+            icon: Icon(Icons.more_vert),
+            tooltip: 'Open more',
+            onPressed: () {
+              // ...
+            },
+          ),
         ],
         bottom: TabBar(
           controller: _controller,
